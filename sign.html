@@ -134,6 +134,11 @@
     <div class="sign-section" id="signatureSection">
       <h3>Your Signature</h3>
       <p id="signInstruction">Sign below to confirm you agree to the above terms</p>
+      <div id="ackRow" style="display:flex;align-items:flex-start;gap:10px;margin:14px 0;padding:12px;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;">
+        <input type="checkbox" id="ackCheckbox" style="margin-top:3px;width:20px;height:20px;flex-shrink:0;" onchange="onAckChange()">
+        <label for="ackCheckbox" id="ackLabel" style="font-size:14px;color:#0f172a;line-height:1.5;cursor:pointer;"></label>
+      </div>
+      <p id="ackHint" style="font-size:12px;color:#94a3b8;margin:0 0 10px;">Confirm the statement above to enable signing.</p>
       <canvas id="signatureCanvas"></canvas>
       <button class="btn btn-clear" onclick="clearCanvas()">Clear Signature</button>
       <button class="btn" id="submitBtn" onclick="handleSign()"
@@ -182,6 +187,7 @@
   let hasDrawn     = false;
   let hasSigned    = false;
   let isSubmitting = false;
+  let ackConfirmed = false;
 
   // ── Already-submitted state ───────────────
   function showAlreadySubmitted(status) {
@@ -265,6 +271,8 @@
         document.getElementById('scopeText').textContent    = request.scope;
         document.getElementById('signInstruction').textContent =
           'I, ' + request.customer_name + ', confirm the work above has been completed to my satisfaction';
+        document.getElementById('ackLabel').textContent =
+          'I confirm that I am ' + request.customer_name + ', and the work described has been completed to my satisfaction.';
         document.getElementById('submitBtn').textContent    = '✓ I Confirm & Sign';
         document.getElementById('scopeLabel').textContent   = 'Work Completed';
         document.getElementById('successTitle').textContent = 'Sign-off Complete!';
@@ -298,6 +306,8 @@
         document.getElementById('scopeText').textContent    = request.scope;
         document.getElementById('signInstruction').textContent =
           `I, ${request.customer_name}, agree to the above terms`;
+        document.getElementById('ackLabel').textContent =
+          'I confirm that I am ' + request.customer_name + ', and I have reviewed and agree to the scope of work and the price of $' + parseFloat(request.agreed_price).toFixed(2) + ' described above.';
         document.getElementById('legalText').textContent =
           `By signing, ${request.customer_name} confirms they have read and agreed ` +
           `to the scope of work and payment terms. This agreement is timestamped ` +
@@ -325,6 +335,9 @@
   function initCanvas() {
     const canvas = document.getElementById('signatureCanvas');
     const ctx    = canvas.getContext('2d');
+
+    canvas.style.opacity       = '0.4';
+    canvas.style.pointerEvents = 'none';
 
     function resize() {
       const rect    = canvas.getBoundingClientRect();
@@ -395,6 +408,23 @@
     btn.style.cursor        = 'not-allowed';
   }
 
+  function onAckChange() {
+    ackConfirmed = document.getElementById('ackCheckbox').checked;
+    const canvas = document.getElementById('signatureCanvas');
+    const hint = document.getElementById('ackHint');
+    if (ackConfirmed) {
+      canvas.style.opacity = '1';
+      canvas.style.pointerEvents = 'auto';
+      hint.style.display = 'none';
+    } else {
+      canvas.style.opacity = '0.4';
+      canvas.style.pointerEvents = 'none';
+      hint.style.display = 'block';
+      // also clear any drawing and re-disable submit
+      clearCanvas();
+    }
+  }
+
   // ── Negotiation flow ──────────────────────
   function handleSign() {
     submitSignature('signed', '');
@@ -435,6 +465,11 @@
     const body = { status, message: message || '' };
 
     if (status === 'signed') {
+      if (!ackConfirmed) {
+        alert('Please confirm the statement above before signing.');
+        isSubmitting = false;
+        return;
+      }
       if (!hasDrawn) {
         alert('Please sign before submitting.');
         isSubmitting = false;
@@ -443,6 +478,9 @@
       const canvas = document.getElementById('signatureCanvas');
       body.signatureBase64 = canvas.toDataURL('image/png');
     }
+
+    body.ackConfirmed = ackConfirmed;
+    body.signerDevice = navigator.userAgent;
 
     document.getElementById('submitBtn').disabled = true;
     showState('stateSaving');
