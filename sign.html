@@ -230,7 +230,7 @@
 
     try {
       const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/remote_signing_requests?id=eq.${requestId}&select=*`,
+        `${EDGE_FUNCTION}?id=${encodeURIComponent(requestId)}&format=json&mode=request`,
         {
           headers: {
             'apikey':        SUPABASE_ANON_KEY,
@@ -239,14 +239,12 @@
         }
       );
 
-      const data = await res.json();
+      const request = await res.json();
 
-      if (!data || data.length === 0) {
+      if (!request || request.error || !request.id) {
         showState('stateNotFound');
         return;
       }
-
-      const request = data[0];
 
       // Check if expired
       if (new Date() > new Date(request.expires_at)) {
