@@ -83,8 +83,8 @@
 
 <!-- Already submitted state -->
 <div class="state" id="stateAlreadySubmitted">
-  <div class="state-icon">🔒</div>
-  <h2 style="color:#2c1810;font-size:18px;">Already Submitted</h2>
+  <div class="state-icon" id="alreadySubmittedIcon">🔒</div>
+  <h2 id="alreadySubmittedTitle" style="color:#2c1810;font-size:18px;">Already Submitted</h2>
   <p id="alreadySubmittedMsg" style="margin-top:8px;font-size:14px;line-height:1.6;"></p>
   <p style="margin-top:16px;font-size:12px;color:#94a3b8;">
     If you need to make changes please contact your contractor directly.
@@ -192,16 +192,29 @@
   // ── Already-submitted state ───────────────
   function showAlreadySubmitted(status) {
     showState('stateAlreadySubmitted');
-    const msg = document.getElementById('alreadySubmittedMsg');
+    const msg   = document.getElementById('alreadySubmittedMsg');
+    const title = document.getElementById('alreadySubmittedTitle');
+    const icon  = document.getElementById('alreadySubmittedIcon');
     if (status === 'signed' || status === 'remote_approved') {
+      title.textContent = 'Already Submitted';
+      icon.textContent  = '🔒';
       msg.innerHTML  = '✅ You have already signed this agreement. No further action needed.';
       msg.style.color = '#057a55';
     } else if (status === 'negotiating') {
+      title.textContent = 'Already Submitted';
+      icon.textContent  = '🔒';
       msg.innerHTML  = '💬 You have already submitted a change request. The contractor will review and send an updated agreement if needed.';
       msg.style.color = '#d97706';
     } else if (status === 'declined') {
+      title.textContent = 'Already Submitted';
+      icon.textContent  = '🔒';
       msg.innerHTML  = '❌ You have already declined this agreement.';
       msg.style.color = '#dc2626';
+    } else if (status === 'cancelled') {
+      title.textContent = 'No Longer Available';
+      icon.textContent  = '🚫';
+      msg.innerHTML  = 'This signing request is no longer available. Please contact your contractor for more information.';
+      msg.style.color = '#64748b';
     }
   }
 
@@ -256,7 +269,8 @@
       if (request.status === 'signed' ||
           request.status === 'negotiating' ||
           request.status === 'declined' ||
-          request.status === 'remote_approved') {
+          request.status === 'remote_approved' ||
+          request.status === 'cancelled') {
         showAlreadySubmitted(request.status);
         return;
       }
