@@ -179,8 +179,20 @@
 </div>
 
 <script>
-  const SUPABASE_URL      = 'https://nwtnkoifnlggywwonjxj.supabase.co';
-  const SUPABASE_ANON_KEY = 'sb_publishable_rTl57cmjHOU-jotYfM--Fg_2GQQJgAu';
+  const SB_CONFIGS = {
+    dev:  {
+      url: 'https://nwtnkoifnlggywwonjxj.supabase.co',
+      key: 'sb_publishable_rTl57cmjHOU-jotYfM--Fg_2GQQJgAu',
+    },
+    prod: {
+      url: 'https://jugfdikoiavuxrefxfue.supabase.co',
+      key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp1Z2ZkaWtvaWF2dXhyZWZ4ZnVlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1MTg0MjMsImV4cCI6MjEwMzA5NDQyM30.b0AxEc7LJFmsP0jHTj603R8NXzt3XvuyfUx8hTn4YCE',
+    },
+  };
+  const _envParam = new URLSearchParams(window.location.search).get('env');
+  const _env = _envParam === 'prod' ? 'prod' : 'dev';   // default dev for safety/back-compat
+  const SUPABASE_URL      = SB_CONFIGS[_env].url;
+  const SUPABASE_ANON_KEY = SB_CONFIGS[_env].key;
   const EDGE_FUNCTION     = `${SUPABASE_URL}/functions/v1/sign`;
 
   let requestId    = null;
